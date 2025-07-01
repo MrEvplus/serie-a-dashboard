@@ -38,7 +38,7 @@ if os.path.exists(DATA_PATH):
     st.write("✅ Ecco un’anteprima del tuo file Excel:")
     st.dataframe(df.head())
 else:
-    st.warning(⚠️ Nessun database presente. Carica il file Excel per iniziare.")
+    st.warning("⚠ Nessun database presente. Carica il file Excel per iniziare.")
     st.stop()
 import streamlit as st
 import pandas as pd
