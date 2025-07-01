@@ -6,7 +6,7 @@ import os
 # Costanti
 # -------------------------------
 DATA_FOLDER = "data"
-DATA_FILE = "serie_a_data.xlsx"
+DATA_FILE = "serie a 20-25.xlsx"
 DATA_PATH = os.path.join(DATA_FOLDER, DATA_FILE)
 
 st.set_page_config(page_title="Serie A Trading Dashboard", layout="wide")
