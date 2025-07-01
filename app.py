@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+import plotly.express as px
 import os
 
 # -------------------------------
@@ -22,7 +24,6 @@ if not os.path.exists(DATA_FOLDER):
 uploaded_file = st.file_uploader("Carica il tuo database Excel:", type=["xlsx"])
 
 if uploaded_file is not None:
-    # sovrascrive il file esistente
     with open(DATA_PATH, "wb") as f:
         f.write(uploaded_file.read())
     st.success("✅ Database caricato e salvato con successo!")
@@ -31,40 +32,15 @@ if uploaded_file is not None:
 # Caricamento automatico file esistente
 # -------------------------------
 if os.path.exists(DATA_PATH):
-    df = pd.read_excel(DATA_PATH, sheet_name=None)
-    df = list(df.values())[0]
-    st.success("✅ Database trovato e caricato automaticamente.")
-    
-    st.write("✅ Ecco un’anteprima del tuo file Excel:")
-    st.dataframe(df.head())
+    try:
+        df = pd.read_excel(DATA_PATH, sheet_name=None)
+        df = list(df.values())[0]
+        st.success("✅ Database caricato automaticamente!")
+    except Exception as e:
+        st.error(f"Errore nel caricamento file: {e}")
+        st.stop()
 else:
     st.warning("⚠ Nessun database presente. Carica il file Excel per iniziare.")
-    st.stop()
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-
-# Imposta la pagina Streamlit
-st.set_page_config(page_title="Serie A Trading Dashboard", layout="wide")
-
-st.title("⚽ League Stats [5 Years]")
-
-# -------------------------------
-# CARICAMENTO DATABASE
-# -------------------------------
-
-# Nome file Excel
-DATA_FILE = "serie a 20-25.xlsx"
-
-try:
-    # Carica il file Excel
-    df = pd.read_excel(DATA_FILE, sheet_name=None)
-    df = list(df.values())[0]
-    st.success("✅ Database caricato correttamente!")
-
-except Exception as e:
-    st.error(f"Errore nel caricamento file: {e}")
     st.stop()
 
 # -------------------------------
@@ -97,7 +73,6 @@ df["btts"] = np.where(
 # CALCOLO GOAL BANDS
 # -------------------------------
 
-# Funzione per classificare i minuti
 def classify_goal_minute(minute):
     if pd.isna(minute):
         return None
@@ -115,7 +90,6 @@ def classify_goal_minute(minute):
     else:
         return "76-90"
 
-# Colonne minuti gol Home e Away
 goal_cols_home = [
     "home 1 goal segnato (min)",
     "home 2 goal segnato(min)",
@@ -140,7 +114,6 @@ goal_cols_away = [
     "9  goal away (min)"
 ]
 
-# Unisci tutti i minuti
 goal_minutes = []
 
 for col in goal_cols_home + goal_cols_away:
@@ -177,22 +150,22 @@ grouped = df.groupby(group_cols).agg(
     BTTS_pct=("btts", "mean"),
 ).reset_index()
 
-# Arrotonda
 cols_pct = [col for col in grouped.columns if "_pct" in col or "AvgGoals" in col]
 grouped[cols_pct] = grouped[cols_pct].round(2)
 
 # -------------------------------
-# FILTRI STREAMLIT
+# STREAMLIT VISUALIZATION
 # -------------------------------
 
 countries = sorted(df["country"].dropna().unique().tolist())
 country_sel = st.selectbox("🌍 Seleziona Paese", ["Tutti"] + countries)
 
+filtered_grouped = grouped.copy()
 if country_sel != "Tutti":
-    grouped = grouped[grouped["country"] == country_sel]
+    filtered_grouped = grouped[grouped["country"] == country_sel]
 
 st.subheader("League Stats Summary")
-st.dataframe(grouped, use_container_width=True)
+st.dataframe(filtered_grouped, use_container_width=True)
 
 # -------------------------------
 # GRAFICO GOAL BANDS
